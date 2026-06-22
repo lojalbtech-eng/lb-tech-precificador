@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LB Tech — Precificador ML &amp; Shopee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1F2937; --ink-soft:#4B5563; --ink-faint:#9CA3AF;
+    --blue:#2563EB; --blue-dark:#1D4ED8; --blue-tint:#EFF4FF;
+    --line:#E5E7EB; --line-soft:#F1F3F6;
+    --surface:#FFFFFF; --bg:#F7F8FA;
+    --ml:#F5A623; --ml-tint:#FFF6E6;
+    --shopee:#EE4D2D; --shopee-tint:#FDEDE8;
+    --green:#0E9F6E; --green-tint:#E7F7F0;
+    --red:#DC2626; --red-tint:#FDECEC;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .num{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px;}
+
+  header.top{display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap;}
+  .logo{width:46px;height:46px;border-radius:12px;flex:none;background:var(--ink);display:grid;place-items:center;box-shadow:var(--shadow);}
+  .logo svg{width:30px;height:30px;}
+  .brand h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:1.35rem;letter-spacing:-.02em;margin:0;line-height:1.1;}
+  .brand p{margin:2px 0 0;color:var(--ink-soft);font-size:.86rem;}
+  .top-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .regime{font-size:.72rem;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:7px 12px;border-radius:999px;white-space:nowrap;}
+  .regime b{color:var(--ink);font-weight:600}
+  .userbox{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 4px 4px 12px;}
+  .userbox span{font-size:.72rem;color:var(--ink-faint);}
+  .userbox input{border:none;outline:none;font:inherit;font-size:.78rem;width:110px;background:transparent;color:var(--ink);font-weight:600;padding:3px 8px;}
+
+  .sync{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--ink-soft);background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:999px;}
+  .sync .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);}
+  .sync.online .dot{background:var(--green);box-shadow:0 0 0 3px var(--green-tint);}
+  .sync.offline .dot{background:var(--ink-faint);}
+  .sync.error .dot{background:var(--red);box-shadow:0 0 0 3px var(--red-tint);}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:22px;margin-top:22px;align-items:start;}
+  @media (max-width:880px){ .grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+  .panel{padding:20px;}
+  .panel + .panel{border-top:1px solid var(--line-soft);}
+  .eyebrow{font-family:"Space Grotesk",sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px;}
+
+  label.field{display:block;margin-bottom:14px;}
+  label.field:last-child{margin-bottom:0;}
+  .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .lab span:first-child{font-size:.84rem;font-weight:500;color:var(--ink);}
+  .lab .hint{font-size:.72rem;color:var(--ink-faint);}
+  .inp{position:relative;}
+  .inp .prefix,.inp .suffix{position:absolute;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:.85rem;pointer-events:none;}
+  .inp .prefix{left:13px;} .inp .suffix{right:13px;}
+  input[type=text],input[type=number]{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-size:.95rem;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s, box-shadow .15s;}
+  input.has-prefix{padding-left:32px;} input.has-suffix{padding-right:34px;}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+  input.num{font-family:"JetBrains Mono",monospace;}
+
+  .slider-row{display:flex;align-items:center;gap:12px;}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--blue) var(--fill,40%),var(--line) var(--fill,40%));}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2.5px solid var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2.5px solid var(--blue);cursor:pointer;}
+  .pill-val{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.95rem;color:var(--blue);min-width:58px;text-align:right;}
+
+  .reset{margin-top:4px;background:none;border:none;color:var(--ink-faint);font-size:.76rem;cursor:pointer;text-decoration:underline;padding:0;font-family:inherit;}
+  .reset:hover{color:var(--blue);}
+
+  .res-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:4px;}
+  .res-head h2{font-family:"Space Grotesk",sans-serif;font-size:1.15rem;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .res-head .cost{font-size:.82rem;color:var(--ink-soft);}
+  .res-head .cost b{color:var(--ink);font-weight:600;}
+
+  .winner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(120deg,var(--blue-tint),#fff);border:1px solid #DBE6FF;border-radius:12px;padding:14px 16px;margin:16px 0 6px;}
+  .winner .tag{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);}
+  .winner .big{font-family:"JetBrains Mono",monospace;font-size:1.5rem;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+  .winner .ch{font-size:.86rem;color:var(--ink-soft);}
+  .winner .ch b{color:var(--ink);}
+  .winner .prof{margin-left:auto;text-align:right;}
+  .winner .prof .pl{font-size:.7rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;}
+  .winner .prof .pv{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--green);font-size:1.05rem;}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center;}
+  .btn{font-family:"Inter",sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;border-radius:9px;padding:9px 15px;border:1.5px solid transparent;transition:.15s;display:inline-flex;align-items:center;gap:7px;}
+  .btn svg{width:15px;height:15px;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-primary:disabled{background:var(--line);color:var(--ink-faint);cursor:not-allowed;}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink-soft);}
+  .btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+  .btn-danger{background:#fff;border-color:var(--line);color:var(--red);}
+  .btn-danger:hover{background:var(--red-tint);border-color:var(--red);}
+  .toast{font-size:.78rem;font-weight:600;align-self:center;opacity:0;transition:opacity .3s;}
+  .toast.show{opacity:1;}
+  .toast.ok{color:var(--green);} .toast.err{color:var(--red);}
+
+  .bd{margin:18px 0 4px;}
+  .bd-title{font-size:.78rem;color:var(--ink-soft);margin-bottom:8px;display:flex;justify-content:space-between;}
+  .bd-title b{color:var(--ink);font-family:"JetBrains Mono",monospace;}
+  .bar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .bar .seg{height:100%;transition:width .4s cubic-bezier(.4,0,.2,1);min-width:2px;}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;}
+  .legend .item{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--ink-soft);}
+  .legend .dot{width:9px;height:9px;border-radius:3px;flex:none;}
+  .legend .v{font-family:"JetBrains Mono",monospace;color:var(--ink);font-weight:500;}
+
+  .tbl-block{margin-top:22px;}
+  .tbl-head{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+  .chip{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:6px;}
+  .chip.ml{background:var(--ml-tint);color:#a8690a;}
+  .chip.sh{background:var(--shopee-tint);color:#c23415;}
+  .tbl-head h3{font-family:"Space Grotesk",sans-serif;font-size:.92rem;font-weight:600;margin:0;}
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  thead th{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--line);}
+  thead th:first-child{text-align:left;}
+  tbody td{padding:10px;text-align:right;border-bottom:1px solid var(--line-soft);font-family:"JetBrains Mono",monospace;color:var(--ink-soft);}
+  tbody td:first-child{text-align:left;font-family:"Inter",sans-serif;color:var(--ink);font-weight:500;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody .price{font-weight:700;color:var(--ink);}
+  tbody tr.best td.price{color:var(--blue);}
+  tbody tr.best{background:var(--blue-tint);}
+  .flag{display:inline-block;margin-left:6px;font-size:.62rem;font-weight:700;vertical-align:middle;background:var(--red-tint);color:var(--red);padding:1px 6px;border-radius:5px;letter-spacing:.03em;}
+  .mreal-ok{color:var(--green);} .mreal-off{color:var(--red);}
+
+  .note{font-size:.8rem;color:var(--ink-soft);margin-top:18px;padding:13px 15px;background:var(--line-soft);border-radius:10px;border-left:3px solid var(--blue);}
+  .note b{color:var(--ink);}
+
+  .hist{margin-top:22px;}
+  .hist-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .hist-head h2{font-family:"Space Grotesk",sans-serif;font-size:1.1rem;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .hist-count{font-size:.78rem;color:var(--ink-faint);background:var(--line-soft);padding:2px 9px;border-radius:999px;}
+  .hist-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+  .hist-empty{padding:34px 20px;text-align:center;color:var(--ink-faint);font-size:.86rem;}
+  .hist-scroll{overflow-x:auto;}
+  table.hist-tbl{min-width:860px;}
+  table.hist-tbl thead th{white-space:nowrap;}
+  table.hist-tbl tbody td{color:var(--ink-soft);}
+  table.hist-tbl tbody td.prod{font-family:"Inter",sans-serif;color:var(--ink);font-weight:600;}
+  table.hist-tbl tbody td.user{font-family:"Inter",sans-serif;color:var(--ink-soft);font-size:.78rem;text-align:left;}
+  table.hist-tbl tbody td.when{font-size:.76rem;color:var(--ink-faint);font-family:"Inter",sans-serif;text-align:left;white-space:nowrap;}
+  table.hist-tbl tbody td.canal{font-family:"Inter",sans-serif;font-weight:500;color:var(--ink);text-align:left;}
+  table.hist-tbl tbody td.price{color:var(--blue);font-weight:700;}
+  .row-actions{display:flex;gap:6px;justify-content:flex-end;}
+  .icon-btn{border:1px solid var(--line);background:#fff;border-radius:7px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--ink-soft);transition:.15s;padding:0;}
+  .icon-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .icon-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-tint);}
+  .icon-btn svg{width:15px;height:15px;}
+
+  .setup-banner{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E;padding:12px 16px;border-radius:10px;font-size:.84rem;margin-top:14px;}
+  .setup-banner b{color:#7C2D12;}
+  .setup-banner code{background:#FEF3C7;padding:1px 6px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:.85em;}
+
+  footer{margin-top:30px;font-size:.74rem;color:var(--ink-faint);line-height:1.6;}
+  footer code{font-family:"JetBrains Mono",monospace;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:5px;font-size:.92em;}
+
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M9 6v20h7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 6h8a6 6 0 0 1 0 10H9m8 0a6 6 0 0 1 0 10h-4" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Precificador LB&nbsp;Tech</h1>
+      <p>Preço sugerido em Mercado Livre e Shopee &middot; base de cálculo da skill</p>
+    </div>
+    <div class="top-right">
+      <div class="userbox" title="Seu nome/identificação fica visível no histórico">
+        <span>quem:</span>
+        <input id="usuario" type="text" maxlength="20" placeholder="seu nome" autocomplete="off">
+      </div>
+      <div class="sync" id="syncBadge"><span class="dot"></span><span id="syncTxt">local</span></div>
+      <div class="regime">Regime: <b>MEI</b></div>
+    </div>
+  </header>
+
+  <div id="setupBanner" class="setup-banner" hidden>
+    <b>Modo local ativo.</b> Para compartilhar o histórico com outras pessoas, configure a URL do Google Apps Script no início do arquivo HTML (linha <code>const API_URL</code>).
+  </div>
+
+  <div class="grid">
+
+    <!-- ENTRADA -->
+    <div class="card" role="form" aria-label="Dados do produto e premissas">
+      <div class="panel">
+        <p class="eyebrow">Produto</p>
+        <label class="field">
+          <span class="lab"><span>Nome do produto</span></span>
+          <div class="inp"><input type="text" id="produto" placeholder="Ex.: Fone Bluetooth XYZ" autocomplete="off"></div>
+        </label>
+        <label class="field">
+          <span class="lab"><span>Custo de aquisição</span><span class="hint">na nota do distribuidor</span></span>
+          <div class="inp"><span class="prefix">R$</span><input type="number" id="custo" class="num has-prefix" min="0" step="0.01" placeholder="0,00" value="25"></div>
+        </label>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow">Premissas ajustáveis</p>
+        <label class="field">
+          <span class="lab"><span>Custo da embalagem</span><span class="hint">caixa, plástico, etiqueta</span></span>
+          <div class="inp"><span class="prefix">R$</span><input type="number" id="embalagem" class="num has-prefix" min="0" step="0.10" value="1.50"></div>
+        </label>
+        <label class="field">
+          <span class="lab"><span>Gasto com anúncios (ads)</span><span class="hint">% do preço</span></span>
+          <div class="slider-row"><input type="range" id="ads" min="0" max="25" step="0.5" value="0"><span class="pill-val" id="adsVal">0%</span></div>
+        </label>
+        <label class="field">
+          <span class="lab"><span>Margem de lucro desejada</span><span class="hint">líquida, sobre o preço</span></span>
+          <div class="slider-row"><input type="range" id="margem" min="5" max="50" step="1" value="20"><span class="pill-val" id="margemVal">20%</span></div>
+        </label>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow">Premissas avançadas <span style="text-transform:none;letter-spacing:0;color:var(--ink-faint);font-weight:400">(padrão da skill)</span></p>
+        <label class="field">
+          <span class="lab"><span>Overhead estrutural</span><span class="hint">energia, transporte, ERP</span></span>
+          <div class="slider-row"><input type="range" id="overhead" min="0" max="20" step="0.5" value="10"><span class="pill-val" id="overheadVal">10%</span></div>
+        </label>
+        <label class="field">
+          <span class="lab"><span>Frete absorvido — Mercado Livre</span></span>
+          <div class="inp"><span class="prefix">R$</span><input type="number" id="freteMl" class="num has-prefix" min="0" step="0.50" value="8"></div>
+        </label>
+        <label class="field" style="margin-bottom:8px">
+          <span class="lab"><span>Frete absorvido — Shopee</span></span>
+          <div class="inp"><span class="prefix">R$</span><input type="number" id="freteShopee" class="num has-prefix" min="0" step="0.50" value="5"></div>
+        </label>
+        <button class="reset" id="reset" type="button">Restaurar padrões da skill</button>
+      </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="card">
+      <div class="panel">
+        <div class="res-head">
+          <h2 id="resTitulo">Resultado</h2>
+          <span class="cost" id="resCusto"></span>
+        </div>
+
+        <div class="winner" id="winner" hidden>
+          <div>
+            <div class="tag">Canal mais eficiente p/ a margem alvo</div>
+            <div class="big num" id="winPrice">—</div>
+            <div class="ch" id="winChannel">—</div>
+          </div>
+          <div class="prof">
+            <div class="pl">Lucro / venda</div>
+            <div class="pv num" id="winProfit">—</div>
+          </div>
+        </div>
+
+        <div class="actions" id="resActions" hidden>
+          <button class="btn btn-primary" id="btnSalvar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+            <span id="btnSalvarTxt">Salvar no histórico</span>
+          </button>
+          <span class="toast" id="toast"></span>
+        </div>
+
+        <div class="bd" id="bd" hidden>
+          <div class="bd-title"><span>Composição do preço — <span id="bdChannel"></span></span><b id="bdPrice"></b></div>
+          <div class="bar" id="bar"></div>
+          <div class="legend" id="legend"></div>
+        </div>
+
+        <div class="tbl-block">
+          <div class="tbl-head"><span class="chip ml">Mercado Livre</span><h3>Preço por modalidade</h3></div>
+          <table>
+            <thead><tr><th>Modalidade</th><th>Preço</th><th>Comissão</th><th>Tx. fixa</th><th>Frete</th><th>Lucro</th><th>Margem real</th></tr></thead>
+            <tbody id="tbodyMl"></tbody>
+          </table>
+        </div>
+
+        <div class="tbl-block">
+          <div class="tbl-head"><span class="chip sh">Shopee</span><h3>Preço por modalidade</h3></div>
+          <table>
+            <thead><tr><th>Modalidade</th><th>Preço</th><th>Comissão</th><th>Tx. fixa</th><th>Frete</th><th>Lucro</th><th>Margem real</th></tr></thead>
+            <tbody id="tbodyShopee"></tbody>
+          </table>
+        </div>
+
+        <div class="note" id="note"></div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- HISTÓRICO -->
+  <div class="card hist">
+    <div class="panel">
+      <div class="hist-head">
+        <h2>Histórico de precificações</h2>
+        <span class="hist-count" id="histCount">0</span>
+        <div class="hist-actions">
+          <button class="btn btn-ghost" id="btnRecarregar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Atualizar
+          </button>
+          <button class="btn btn-ghost" id="btnCsv" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar CSV
+          </button>
+          <button class="btn btn-danger" id="btnLimpar" type="button">Limpar tudo</button>
+        </div>
+      </div>
+      <div id="histEmpty" class="hist-empty">Nenhuma precificação salva ainda. Calcule um produto e clique em <b>Salvar no histórico</b>.</div>
+      <div class="hist-scroll" id="histScroll" hidden>
+        <table class="hist-tbl">
+          <thead><tr><th>Data</th><th>Quem</th><th>Produto</th><th>Custo</th><th>Margem alvo</th><th>Melhor canal</th><th>Preço</th><th>Lucro</th><th></th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Fórmula: <code>Preço = (Custo + Embalagem + TaxaFixa + Frete) / (1 − %Comissão − %Overhead − %Ads − %Margem)</code><br>
+    Premissas (jun/2026): ML 11% Clássico / 16% Premium, taxa fixa R$ 6,00 abaixo de R$ 79 &middot;
+    Shopee 14% Padrão / 20% Destaque, taxa fixa por faixa (R$ 4 / R$ 8 / R$ 16 / R$ 26) &middot; MEI 0% imposto.
+    <span style="color:var(--red)">⚠ Margem real abaixo do alvo</span> indica que o preço caiu numa faixa de taxa fixa desfavorável.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   ↓↓↓  COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT  ↓↓↓
+   Deve terminar em /exec. Deixe vazio "" para usar modo local (localStorage).
+============================================================ */
+const API_URL = "";
+/* ============================================================ */
+
+const HKEY = "lbtech_historico_v1";
+const UKEY = "lbtech_usuario";
+const MODO_REMOTO = !!API_URL;
+
+/* Premissas globais (idênticas à skill) */
+const ML_COMISSOES = {"Clássico":0.11, "Premium":0.16};
+const ML_FIXO_VALOR = 6.00, ML_FIXO_LIMITE = 79.00;
+const SHOPEE_COMISSOES = {"Padrão":0.14, "Destaque":0.20};
+const IMPOSTO_MEI = 0.00;
+const PADROES = {custo:25, embalagem:1.50, ads:0, margem:20, overhead:10, freteMl:8, freteShopee:5};
+
+function mlTaxaFixa(p){ return p < ML_FIXO_LIMITE ? ML_FIXO_VALOR : 0; }
+function shopeeTaxaFixa(p){
+  if(p < 8)   return p*0.50;
+  if(p < 79)  return 4.00;
+  if(p < 199) return 8.00;
+  if(p < 500) return 16.00;
+  return 26.00;
+}
+
+function calcular(custo, embalagem, comissao, fixoFunc, frete, overhead, ads, margem){
+  const denom = 1 - comissao - overhead - ads - margem - IMPOSTO_MEI;
+  if(denom <= 0) return {erro:true};
+  let preco = (custo + embalagem) * 2 || 10;
+  for(let i=0;i<30;i++){
+    const fixo = fixoFunc(preco);
+    const novo = (custo + embalagem + fixo + frete) / denom;
+    if(Math.abs(novo - preco) < 0.005){ preco = novo; break; }
+    preco = novo;
+  }
+  const fixo = fixoFunc(preco);
+  const comissaoRs = comissao*preco;
+  const overheadRs = overhead*preco;
+  const adsRs = ads*preco;
+  const lucroRs = preco - custo - embalagem - fixo - frete - comissaoRs - overheadRs - adsRs;
+  return { preco, fixo, comissaoRs, overheadRs, adsRs, frete, custo, embalagem, lucroRs,
+           margemReal: preco ? lucroRs/preco : 0 };
+}
+
+const brl = v => v==null ? "—" : "R$ " + Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = v => (v*100).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1}) + "%";
+const $ = id => document.getElementById(id);
+function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ============== API (Apps Script ou localStorage) ============== */
+
+function setSync(state, label){
+  const b = $("syncBadge"), t = $("syncTxt");
+  b.classList.remove("online","offline","error");
+  b.classList.add(state);
+  t.textContent = label;
+}
+
+async function apiList(){
+  if(!MODO_REMOTO){
+    try { return JSON.parse(localStorage.getItem(HKEY)) || []; }
+    catch(e){ return []; }
+  }
+  const r = await fetch(API_URL + "?action=list", {method:"GET"});
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "erro");
+  return j.items || [];
+}
+
+async function apiAdd(item){
+  if(!MODO_REMOTO){
+    const arr = JSON.parse(localStorage.getItem(HKEY)) || [];
+    arr.unshift(item);
+    localStorage.setItem(HKEY, JSON.stringify(arr));
+    return item;
+  }
+  const r = await fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"}, // evita preflight CORS
+    body: JSON.stringify({action:"add", item})
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "erro");
+  return j.item;
+}
+
+async function apiDelete(id){
+  if(!MODO_REMOTO){
+    const arr = (JSON.parse(localStorage.getItem(HKEY)) || []).filter(x => x.id !== id);
+    localStorage.setItem(HKEY, JSON.stringify(arr));
+    return 1;
+  }
+  const r = await fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({action:"delete", id})
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "erro");
+  return j.deleted;
+}
+
+async function apiClear(){
+  if(!MODO_REMOTO){ localStorage.setItem(HKEY, "[]"); return; }
+  const r = await fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({action:"clear"})
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "erro");
+}
+
+/* ============== Estado da UI ============== */
+
+let ultimoCenario = null;
+let historicoCache = [];
+
+const ids = ["produto","custo","embalagem","ads","margem","overhead","freteMl","freteShopee"];
+ids.forEach(id => $(id).addEventListener("input", render));
+$("reset").addEventListener("click", () => {
+  $("produto").value = "";
+  $("custo").value = PADROES.custo;
+  $("embalagem").value = PADROES.embalagem;
+  $("ads").value = PADROES.ads;
+  $("margem").value = PADROES.margem;
+  $("overhead").value = PADROES.overhead;
+  $("freteMl").value = PADROES.freteMl;
+  $("freteShopee").value = PADROES.freteShopee;
+  render();
+});
+
+$("usuario").value = localStorage.getItem(UKEY) || "";
+$("usuario").addEventListener("input", e => {
+  localStorage.setItem(UKEY, e.target.value);
+});
+
+function sliderFill(el){
+  const min=+el.min, max=+el.max, v=+el.value;
+  el.style.setProperty("--fill", ((v-min)/(max-min)*100)+"%");
+}
+
+const SEG = [
+  {key:"custo",     label:"Custo",     color:"#1F2937"},
+  {key:"embalagem", label:"Embalagem", color:"#6B7280"},
+  {key:"frete",     label:"Frete",     color:"#9CA3AF"},
+  {key:"fixo",      label:"Taxa fixa", color:"#C4B5A0"},
+  {key:"comissaoRs",label:"Comissão",  color:"#F5A623"},
+  {key:"adsRs",     label:"Ads",       color:"#EE4D2D"},
+  {key:"overheadRs",label:"Overhead",  color:"#93C5FD"},
+  {key:"lucroRs",   label:"Lucro",     color:"#0E9F6E"},
+];
+
+function render(){
+  ["ads","margem","overhead"].forEach(id=>sliderFill($(id)));
+  $("adsVal").textContent = (+$("ads").value).toLocaleString("pt-BR") + "%";
+  $("margemVal").textContent = (+$("margem").value).toLocaleString("pt-BR") + "%";
+  $("overheadVal").textContent = (+$("overhead").value).toLocaleString("pt-BR") + "%";
+
+  const produto   = $("produto").value.trim();
+  const custo     = parseFloat($("custo").value) || 0;
+  const embalagem = parseFloat($("embalagem").value) || 0;
+  const ads       = (parseFloat($("ads").value) || 0)/100;
+  const margem    = (parseFloat($("margem").value) || 0)/100;
+  const overhead  = (parseFloat($("overhead").value) || 0)/100;
+  const freteMl   = parseFloat($("freteMl").value) || 0;
+  const freteSh   = parseFloat($("freteShopee").value) || 0;
+
+  $("resTitulo").textContent = produto ? produto : "Resultado";
+  $("resCusto").innerHTML = custo>0
+    ? `Custo <b>${brl(custo)}</b> + embalagem <b>${brl(embalagem)}</b> · margem alvo <b>${pct(margem)}</b>`
+    : "Informe o custo de aquisição para calcular.";
+
+  const rows = [];
+  for(const [mod,com] of Object.entries(ML_COMISSOES)){
+    rows.push({plat:"ML", mod, com, ...calcular(custo,embalagem,com,mlTaxaFixa,freteMl,overhead,ads,margem)});
+  }
+  for(const [mod,com] of Object.entries(SHOPEE_COMISSOES)){
+    rows.push({plat:"Shopee", mod, com, ...calcular(custo,embalagem,com,shopeeTaxaFixa,freteSh,overhead,ads,margem)});
+  }
+
+  const valid = rows.filter(r=>!r.erro && custo>0);
+  const tol = 0.01;
+  const okMargin = valid.filter(r => Math.abs(r.margemReal - margem) <= tol);
+  const pool = okMargin.length ? okMargin : valid;
+  let best=null;
+  pool.forEach(r=>{ if(!best || r.preco < best.preco) best = r; });
+
+  renderTable("tbodyMl",  rows.filter(r=>r.plat==="ML"),     best, margem, tol);
+  renderTable("tbodyShopee", rows.filter(r=>r.plat==="Shopee"), best, margem, tol);
+
+  if(best){
+    $("winner").hidden = false;
+    $("bd").hidden = false;
+    $("resActions").hidden = false;
+    $("winPrice").textContent = brl(best.preco);
+    const nomeCanal = (best.plat==="ML"?"Mercado Livre":"Shopee")+" "+best.mod;
+    $("winChannel").innerHTML = `<b>${nomeCanal}</b> &middot; comissão ${pct(best.com)}`;
+    $("winProfit").textContent = brl(best.lucroRs);
+    renderBreakdown(best, nomeCanal);
+    renderNote(best, valid, margem, tol);
+
+    ultimoCenario = {
+      produto: produto || "(sem nome)",
+      custo, embalagem,
+      adsPct: +$("ads").value, margemPct: +$("margem").value, overheadPct: +$("overhead").value,
+      freteMl, freteShopee: freteSh,
+      melhorCanal: nomeCanal, melhorPreco: best.preco, melhorLucro: best.lucroRs,
+      canais: valid.map(r => ({
+        nome: (r.plat==="ML"?"Mercado Livre":"Shopee")+" "+r.mod,
+        preco: r.preco, lucro: r.lucroRs, margemReal: r.margemReal
+      }))
+    };
+  } else {
+    $("winner").hidden = true;
+    $("bd").hidden = true;
+    $("resActions").hidden = true;
+    ultimoCenario = null;
+    $("note").innerHTML = custo>0
+      ? "A soma de comissão + overhead + ads + margem chegou a 100% ou mais. Reduza algum percentual."
+      : "Preencha o custo de aquisição.";
+  }
+}
+
+function renderTable(tbodyId, rows, best, margem, tol){
+  const tb = $(tbodyId); tb.innerHTML = "";
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    if(r.erro || best==null){
+      tr.innerHTML = `<td>${r.mod}</td><td colspan="6" style="text-align:center;color:var(--ink-faint)">—</td>`;
+      tb.appendChild(tr); return;
+    }
+    const off = Math.abs(r.margemReal - margem) > tol;
+    const isBest = best && r.plat===best.plat && r.mod===best.mod;
+    if(isBest) tr.className = "best";
+    tr.innerHTML = `
+      <td>${r.mod} <span style="color:var(--ink-faint);font-weight:400">(${pct(r.com)})</span></td>
+      <td class="price">${brl(r.preco)}</td>
+      <td>${brl(r.comissaoRs)}</td>
+      <td>${brl(r.fixo)}</td>
+      <td>${brl(r.frete)}</td>
+      <td>${brl(r.lucroRs)}</td>
+      <td class="${off?'mreal-off':'mreal-ok'}">${pct(r.margemReal)}${off?'<span class="flag">abaixo</span>':''}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function renderBreakdown(r, canal){
+  $("bdChannel").textContent = canal;
+  $("bdPrice").textContent = brl(r.preco);
+  const bar = $("bar"), legend = $("legend");
+  bar.innerHTML = ""; legend.innerHTML = "";
+  SEG.forEach(s=>{
+    const val = r[s.key] || 0;
+    if(val <= 0) return;
+    const w = (val / r.preco) * 100;
+    const seg = document.createElement("div");
+    seg.className = "seg"; seg.style.width = w+"%"; seg.style.background = s.color;
+    seg.title = `${s.label}: ${brl(val)} (${w.toFixed(1)}%)`;
+    bar.appendChild(seg);
+    const item = document.createElement("div");
+    item.className = "item";
+    item.innerHTML = `<span class="dot" style="background:${s.color}"></span>${s.label} <span class="v">${brl(val)}</span>`;
+    legend.appendChild(item);
+  });
+}
+
+function renderNote(best, valid, margem, tol){
+  const mlBest = menor(valid.filter(r=>r.plat==="ML"));
+  const shBest = menor(valid.filter(r=>r.plat==="Shopee"));
+  let txt = "";
+  if(mlBest && shBest){
+    const diff = shBest.preco - mlBest.preco;
+    if(diff < 0){
+      txt = `Para a margem de <b>${pct(margem)}</b>, a <b>Shopee ${shBest.mod}</b> entrega o mesmo lucro com preço ${brl(Math.abs(diff))} menor que o melhor do ML.`;
+    } else {
+      txt = `Para a margem de <b>${pct(margem)}</b>, o <b>Mercado Livre ${mlBest.mod}</b> entrega o mesmo lucro com preço ${brl(diff)} menor que a melhor Shopee.`;
+    }
+  }
+  const armadilha = valid.some(r => Math.abs(r.margemReal - margem) > tol);
+  if(armadilha){
+    txt += ` <span style="color:var(--red)">Alguma modalidade caiu numa faixa de taxa fixa desfavorável (margem real abaixo do alvo)</span> — empurre o preço para a faixa seguinte (ex.: ≥ R$ 79,00 no ML elimina a taxa fixa de R$ 6).`;
+  }
+  $("note").innerHTML = txt || "Ajuste as premissas para comparar cenários.";
+}
+function menor(arr){ let m=null; arr.forEach(r=>{ if(!m||r.preco<m.preco) m=r; }); return m; }
+
+/* ============== Histórico ============== */
+
+function showToast(msg, type){
+  const t = $("toast");
+  t.className = "toast " + (type==="err"?"err":"ok") + " show";
+  t.textContent = msg;
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function dataBR(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return String(iso);
+  return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"}) + " " +
+         d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+async function salvarPrecificacao(){
+  if(!ultimoCenario) return;
+  const btn = $("btnSalvar"); btn.disabled = true; $("btnSalvarTxt").textContent = "Salvando…";
+  try {
+    const item = {
+      id: Date.now(),
+      data: new Date().toISOString(),
+      usuario: ($("usuario").value || "").trim() || "—",
+      ...ultimoCenario
+    };
+    await apiAdd(item);
+    showToast("Salvo ✓", "ok");
+    await recarregarHistorico();
+  } catch(e){
+    showToast("Erro ao salvar: " + e.message, "err");
+  } finally {
+    btn.disabled = false; $("btnSalvarTxt").textContent = "Salvar no histórico";
+  }
+}
+
+async function recarregarHistorico(){
+  try {
+    setSync(MODO_REMOTO?"online":"offline", MODO_REMOTO?"sincronizado":"local");
+    historicoCache = await apiList();
+    renderHistorico();
+  } catch(e){
+    setSync("error", "erro");
+    showToast("Erro ao carregar: " + e.message, "err");
+  }
+}
+
+function renderHistorico(){
+  const arr = historicoCache;
+  $("histCount").textContent = arr.length;
+  const empty = $("histEmpty"), scroll = $("histScroll"), body = $("histBody");
+  if(!arr.length){ empty.hidden = false; scroll.hidden = true; body.innerHTML = ""; return; }
+  empty.hidden = true; scroll.hidden = false;
+  body.innerHTML = "";
+  arr.forEach(item => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="when">${dataBR(item.data)}</td>
+      <td class="user">${escapeHtml(item.usuario || "—")}</td>
+      <td class="prod">${escapeHtml(item.produto)}</td>
+      <td>${brl(item.custo)}</td>
+      <td>${Number(item.margemPct).toLocaleString("pt-BR")}%</td>
+      <td class="canal">${escapeHtml(item.melhorCanal)}</td>
+      <td class="price">${brl(item.melhorPreco)}</td>
+      <td>${brl(item.melhorLucro)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" title="Recarregar nos campos" data-load="${item.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+          <button class="icon-btn del" title="Excluir" data-del="${item.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </button>
+        </div>
+      </td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll("[data-load]").forEach(b => b.onclick = () => recarregarItem(+b.dataset.load));
+  body.querySelectorAll("[data-del]").forEach(b => b.onclick = () => excluirItem(+b.dataset.del));
+}
+
+function recarregarItem(id){
+  const item = historicoCache.find(x => Number(x.id) === Number(id));
+  if(!item) return;
+  $("produto").value     = item.produto === "(sem nome)" ? "" : item.produto;
+  $("custo").value       = item.custo;
+  $("embalagem").value   = item.embalagem;
+  $("ads").value         = item.adsPct;
+  $("margem").value      = item.margemPct;
+  $("overhead").value    = item.overheadPct;
+  $("freteMl").value     = item.freteMl;
+  $("freteShopee").value = item.freteShopee;
+  render();
+  document.querySelector(".grid").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+async function excluirItem(id){
+  if(!confirm("Excluir esta precificação?")) return;
+  try {
+    await apiDelete(id);
+    showToast("Excluído ✓", "ok");
+    await recarregarHistorico();
+  } catch(e){
+    showToast("Erro: " + e.message, "err");
+  }
+}
+
+async function limparHistorico(){
+  if(!historicoCache.length) return;
+  if(!confirm("Apagar todo o histórico de precificações? Esta ação não pode ser desfeita.")) return;
+  try {
+    await apiClear();
+    showToast("Histórico apagado ✓", "ok");
+    await recarregarHistorico();
+  } catch(e){
+    showToast("Erro: " + e.message, "err");
+  }
+}
+
+function exportarCsv(){
+  if(!historicoCache.length){ alert("Nenhuma precificação no histórico."); return; }
+  const sep = ";";
+  const head = ["Data","Quem","Produto","Custo","Embalagem","Ads %","Margem alvo %","Overhead %",
+                "Frete ML","Frete Shopee","Melhor canal","Melhor preço","Melhor lucro",
+                "ML Clássico","ML Premium","Shopee Padrão","Shopee Destaque"];
+  const dec = v => (v==null?"":String(v).replace(".",","));
+  const findCanal = (item,nome) => { const c = (item.canais||[]).find(x=>x.nome===nome); return c?dec(c.preco):""; };
+  const linhas = historicoCache.map(item => [
+    dataBR(item.data), item.usuario||"—", item.produto, dec(item.custo), dec(item.embalagem),
+    dec(item.adsPct), dec(item.margemPct), dec(item.overheadPct),
+    dec(item.freteMl), dec(item.freteShopee),
+    item.melhorCanal, dec(item.melhorPreco), dec(item.melhorLucro),
+    findCanal(item,"Mercado Livre Clássico"), findCanal(item,"Mercado Livre Premium"),
+    findCanal(item,"Shopee Padrão"), findCanal(item,"Shopee Destaque")
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(sep));
+  const csv = "\uFEFF" + [head.join(sep), ...linhas].join("\r\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `lb-tech-precificacoes_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+$("btnSalvar").addEventListener("click", salvarPrecificacao);
+$("btnRecarregar").addEventListener("click", recarregarHistorico);
+$("btnCsv").addEventListener("click", exportarCsv);
+$("btnLimpar").addEventListener("click", limparHistorico);
+
+/* Init */
+$("setupBanner").hidden = MODO_REMOTO;
+render();
+recarregarHistorico();
+</script>
+</body>
+</html>
